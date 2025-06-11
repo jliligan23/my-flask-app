@@ -5,9 +5,9 @@ from geopy.distance import geodesic
 auth_bp = Blueprint('auth', __name__)
 
 # Define your office location and allowed radius in meters
-OFFICE_LAT = 14.6091     # Replace with your office's latitude
-OFFICE_LON = 121.0223    # Replace with your office's longitude
-ALLOWED_RADIUS = 200     # Radius in meters
+OFFICE_LAT = 9.8006111     # Replace with your office's latitude
+OFFICE_LON = 118.7456388    # Replace with your office's longitude
+ALLOWED_RADIUS = 100     # Radius in meters
 
 
 def is_within_office(lat, lon):
