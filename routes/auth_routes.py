@@ -1,13 +1,29 @@
 from flask import Blueprint, request, session, redirect, url_for, render_template, current_app
 from bson.objectid import ObjectId
 from geopy.distance import geodesic
+from flask import request
+from flask import request, render_template
 
 auth_bp = Blueprint('auth', __name__)
 
-ALLOWED_IPS = ['122.54.93.224', '14.1.65.213']
+def get_client_ip():
+    # Check for proxy headers first
+    if 'X-Forwarded-For' in request.headers:
+        ip = request.headers['X-Forwarded-For'].split(',')[0].strip()
+    else:
+        ip = request.remote_addr
+    return ip
+
+#ALLOWED_IPS = ['122.54.93.224', '14.1.65.213']
 
 def is_allowed_ip(ip):
-    return ip in ALLOWED_IPS
+    # Always allow localhost for development
+    if ip == '127.0.0.1' or ip.startswith('192.168.'):
+        return True
+
+    # Office IPs (for production use)
+    allowed_ips = ['122.54.93.224', '14.1.65.213']
+    return ip in allowed_ips
 
 
 @auth_bp.route('/login', methods=['GET', 'POST'])
@@ -22,9 +38,10 @@ def login():
 
         if user and bcrypt.check_password_hash(user['password_hash'], password):
             if user['role'] == 'employee':
-                user_ip = request.remote_addr
+                user_ip = get_client_ip()
+                print("Detected IP:", user_ip)
                 if not is_allowed_ip(user_ip):
-                    error = f"Login is only allowed from the office network."
+                    error = "Login is only allowed from the office network."
                     return render_template('login.html', error=error)
 
             session['user_id'] = str(user['_id'])
@@ -32,10 +49,9 @@ def login():
             if user['role'] == 'admin':
                 return redirect(url_for('admin.admin_dashboard'))
             else:
-                return redirect(url_for('employee.dashboard'))
+                return redirect(url_for('employee.employee_dashboard'))
 
-        error = "Invalid username or password."
-        return render_template('login.html', error=error)
+        return render_template('login.html', error="Invalid username or password.")
 
     return render_template('login.html')
 
