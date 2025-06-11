@@ -4,22 +4,11 @@ from geopy.distance import geodesic
 
 auth_bp = Blueprint('auth', __name__)
 
-# Define your office location and allowed radius in meters
-OFFICE_LAT = 9.8006111     # Replace with your office's latitude
-OFFICE_LON = 118.7456388    # Replace with your office's longitude
-ALLOWED_RADIUS = 100     # Radius in meters
+ALLOWED_IPS = ['122.54.93.224', '14.1.65.213']
 
+def is_allowed_ip(ip):
+    return ip in ALLOWED_IPS
 
-def is_within_office(lat, lon):
-    try:
-        user_coords = (float(lat), float(lon))
-        office_coords = (OFFICE_LAT, OFFICE_LON)
-        distance = geodesic(user_coords, office_coords).meters
-        print("Distance from office (meters):", distance)
-        return distance <= ALLOWED_RADIUS
-    except Exception as e:
-        print("Error checking location:", e)
-        return False
 
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
@@ -29,26 +18,24 @@ def login():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
-        latitude = request.form.get('latitude')
-        longitude = request.form.get('longitude')
-
         user = db['users'].find_one({'username': username})
+
         if user and bcrypt.check_password_hash(user['password_hash'], password):
             if user['role'] == 'employee':
-                # Check geolocation for employees only
-                if not latitude or not longitude or not is_within_office(latitude, longitude):
-                    error = "Login is only allowed within the office location."
+                user_ip = request.remote_addr
+                if not is_allowed_ip(user_ip):
+                    error = f"Login is only allowed from the office network."
                     return render_template('login.html', error=error)
 
-            # Login success
             session['user_id'] = str(user['_id'])
+
             if user['role'] == 'admin':
                 return redirect(url_for('admin.admin_dashboard'))
             else:
                 return redirect(url_for('employee.dashboard'))
-        else:
-            error = "Invalid username or password."
-            return render_template('login.html', error=error)
+
+        error = "Invalid username or password."
+        return render_template('login.html', error=error)
 
     return render_template('login.html')
 

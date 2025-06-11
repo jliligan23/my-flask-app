@@ -25,10 +25,7 @@
             <input type="password" name="password" id="password" class="form-control" required>
         </div>
 
-        <!-- Hidden fields for geolocation -->
-        <input type="hidden" name="latitude" id="latitude">
-        <input type="hidden" name="longitude" id="longitude">
-
+        
         <button type="submit" class="btn btn-primary w-100">Login</button>
     </form>
 
@@ -37,29 +34,7 @@
     </div>
 </div>
 
-<script>
-document.addEventListener("DOMContentLoaded", function () {
-    let locationReady = false;
 
-    navigator.geolocation.getCurrentPosition(
-        function (position) {
-            document.getElementById("latitude").value = position.coords.latitude;
-            document.getElementById("longitude").value = position.coords.longitude;
-            locationReady = true;
-        },
-        function (error) {
-            alert("Geolocation access is required to log in.");
-        }
-    );
-
-    document.getElementById("loginForm").addEventListener("submit", function (e) {
-        if (!locationReady) {
-            e.preventDefault();
-            alert("Please wait for your location to be detected before logging in.");
-        }
-    });
-});
-</script>
 
 </body>
 </html>
