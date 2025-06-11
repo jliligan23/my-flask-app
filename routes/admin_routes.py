@@ -2,40 +2,47 @@ from flask import Blueprint, render_template, request, redirect, session, url_fo
 from bson import ObjectId
 from datetime import datetime
 from math import radians, cos, sin, asin, sqrt
+from flask import request
+from routes.decorators import login_required, admin_required
+from bson.objectid import ObjectId
+from flask import Blueprint, render_template, request, redirect, url_for, session, flash
+from bson.objectid import ObjectId
+from db import db  # This assumes your db connection is set up in a db.py file
+
+attendance_collection = db['attendance']
 
 # Blueprint for admin routes
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
 
-def haversine(lon1, lat1, lon2, lat2):
-    # convert decimal degrees to radians
-    lon1, lat1, lon2, lat2 = map(radians, [lon1, lat1, lon2, lat2])
-    # haversine formula
-    dlon = lon2 - lon1
-    dlat = lat2 - lat1
-    a = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlon/2)**2
-    c = 2 * asin(sqrt(a))
-    km = 6371 * c
-    return km
 
-@admin_bp.route('/')
+@admin_bp.route('/dashboard')
+@login_required
+@admin_required
 def admin_dashboard():
-    db = current_app.db
-    if 'user_id' not in session:
-        return redirect('/')
+    # Get filter values
+    employee_filter = request.args.get('employee')
+    date_filter = request.args.get('date')
 
-    user = db['users'].find_one({'_id': ObjectId(session['user_id'])})
-    if not user or user['role'] != 'admin':
-        return 'Access denied'
+    query = {}
+    if employee_filter:
+        query['user_id'] = ObjectId(employee_filter)  # Match user_id from attendance
+    if date_filter:
+        query['date'] = date_filter
 
+    # Get all attendance records
+    attendance = list(attendance_collection.find(query).sort('date', -1))
+
+    # Get all employees
     employees = list(db['users'].find({'role': 'employee'}))
 
-    # Fetch attendance records and add username to each
-    attendance = list(db['attendance'].find())
+    # Convert user_id to username in attendance
+    emp_map = {str(emp['_id']): emp['username'] for emp in employees}
     for record in attendance:
-        emp = db['users'].find_one({'_id': record['user_id']})
-        record['username'] = emp['username'] if emp else 'Unknown'
+        uid = str(record.get('user_id'))
+        record['username'] = emp_map.get(uid, 'Unknown')
 
-    return render_template('admin_dashboard.html', employees=employees, attendance=attendance)
+    return render_template('admin_dashboard.html', attendance=attendance, employees=employees)
+
 
 @admin_bp.route('/add_employee', methods=['POST'])
 def add_employee():

@@ -44,7 +44,8 @@ def login():
                     error = "Login is only allowed from the office network."
                     return render_template('login.html', error=error)
 
-            session['user_id'] = str(user['_id'])
+            session['user_id'] = str(user['_id'])  # Store user ID
+            session['role'] = user['role']         # Store user role, e.g. 'admin' or 'employee'
 
             if user['role'] == 'admin':
                 return redirect(url_for('admin.admin_dashboard'))
