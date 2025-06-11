@@ -13,6 +13,14 @@
         .table-dark th, .table-dark td {
             color: #f1f1f1;
         }
+        .table tbody tr {
+        background-color: white;
+        }
+
+        body.dark-mode .table tbody tr {
+            background-color: #1e1e1e;
+            color: #f1f1f1;
+        }
     </style>
 </head>
 <body class="p-4">
@@ -107,6 +115,53 @@
         </form>
     </div>
 </div>
+
+<h2 class="mt-5">Employee Attendance</h2>
+
+<form method="get" class="row g-3 align-items-end">
+    <div class="col-md-4">
+        <label for="employee" class="form-label">Filter by Employee</label>
+        <select name="employee" id="employee" class="form-select">
+            <option value="">All Employees</option>
+            {% for emp in employees %}
+            <option value="{{ emp.username }}" {% if request.args.get('employee') == emp.username %}selected{% endif %}>{{ emp.username }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="col-md-4">
+        <label for="date" class="form-label">Filter by Date</label>
+        <input type="date" name="date" id="date" class="form-control" value="{{ request.args.get('date', '') }}">
+    </div>
+    <div class="col-md-4">
+        <button type="submit" class="btn btn-primary w-100">Apply Filter</button>
+    </div>
+</form>
+
+<div class="table-responsive">
+    <table class="table table-bordered table-hover mt-3">
+        <thead class="table-dark">
+            <tr>
+                <th>Username</th>
+                <th>Date</th>
+                <th>Time-In</th>
+                <th>Time-Out</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for record in attendance %}
+            <tr>
+                <td>{{ record.username }}</td>
+                <td>{{ record.date }}</td>
+                <td>{{ record.time_in }}</td>
+                <td>{{ record.time_out or "Not yet timed out" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+
+
 
 <script>
     function toggleDarkMode() {

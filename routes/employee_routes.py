@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, session, url_for, current_app
 from utils.encryption import encrypt, decrypt
 from bson import ObjectId
+from datetime import datetime
 
 employee_bp = Blueprint('employee', __name__, url_prefix='/employee')
 
@@ -49,3 +50,30 @@ def delete_credential(cred_id):
     db = current_app.db
     db['credentials'].delete_one({'_id': ObjectId(cred_id)})
     return redirect(url_for('employee.employee_dashboard'))
+
+@employee_bp.route('/time_in', methods=['POST'])
+def time_in():
+    db = current_app.db
+    user_id = ObjectId(session['user_id'])
+    date_str = datetime.now().strftime('%Y-%m-%d')
+
+    db['attendance'].update_one(
+        {'user_id': user_id, 'date': date_str},
+        {'$set': {'time_in': datetime.now().strftime('%H:%M')}},
+        upsert=True
+    )
+    return redirect(url_for('employee.employee_dashboard'))
+
+@employee_bp.route('/time_out', methods=['POST'])
+def time_out():
+    db = current_app.db
+    user_id = ObjectId(session['user_id'])
+    date_str = datetime.now().strftime('%Y-%m-%d')
+
+    db['attendance'].update_one(
+        {'user_id': user_id, 'date': date_str},
+        {'$set': {'time_out': datetime.now().strftime('%H:%M')}},
+        upsert=True
+    )
+    return redirect(url_for('employee.employee_dashboard'))
+

@@ -130,6 +130,32 @@
     </div>
 </div>
 
+<!-- Attendance Button -->
+<button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#attendanceModal">
+    Attendance
+</button>
+
+<!-- Attendance Modal -->
+<div class="modal fade" id="attendanceModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Mark Attendance</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body text-center">
+        <form method="POST" action="/employee/time_in">
+            <button class="btn btn-success" type="submit">Time In</button>
+        </form>
+        <form method="POST" action="/employee/time_out" class="mt-2">
+            <button class="btn btn-danger" type="submit">Time Out</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+
 <script>
     function toggleDarkMode() {
         document.body.classList.toggle('dark-mode');
