@@ -8,6 +8,7 @@ from bson.objectid import ObjectId
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash
 from bson.objectid import ObjectId
 from db import db  # This assumes your db connection is set up in a db.py file
+from datetime import datetime, timedelta
 
 attendance_collection = db['attendance']
 
@@ -25,23 +26,45 @@ def admin_dashboard():
 
     query = {}
     if employee_filter:
-        query['user_id'] = ObjectId(employee_filter)  # Match user_id from attendance
+        query['user_id'] = ObjectId(employee_filter)
     if date_filter:
         query['date'] = date_filter
-
-    # Get all attendance records
-    attendance = list(attendance_collection.find(query).sort('date', -1))
 
     # Get all employees
     employees = list(db['users'].find({'role': 'employee'}))
 
-    # Convert user_id to username in attendance
+    # Create a map from user_id to username
     emp_map = {str(emp['_id']): emp['username'] for emp in employees}
-    for record in attendance:
-        uid = str(record.get('user_id'))
-        record['username'] = emp_map.get(uid, 'Unknown')
 
-    return render_template('admin_dashboard.html', attendance=attendance, employees=employees)
+    # Fetch and process attendance records
+    attendance = []
+    for record in attendance_collection.find(query).sort('date', -1):
+        uid = str(record.get('user_id'))
+        time_in = record.get('time_in')
+        time_out = record.get('time_out')
+
+        # Calculate total hours
+        total_hours = ""
+        if time_in and time_out:
+            try:
+                time_format = "%H:%M"
+                t_in = datetime.strptime(time_in, time_format)
+                t_out = datetime.strptime(time_out, time_format)
+
+                if t_out < t_in:  # Overnight case
+                    t_out += timedelta(days=1)
+
+                duration = t_out - t_in
+                hours = duration.total_seconds() / 3600
+                total_hours = f"{hours:.2f} hrs"
+            except:
+                total_hours = "Invalid time"
+
+        record['username'] = emp_map.get(uid, "Unknown")
+        record['total_hours'] = total_hours
+        attendance.append(record)
+
+    return render_template("admin_dashboard.html", employees=employees, attendance=attendance)
 
 
 @admin_bp.route('/add_employee', methods=['POST'])

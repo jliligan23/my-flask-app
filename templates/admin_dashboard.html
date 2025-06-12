@@ -139,11 +139,12 @@
 <div class="table-responsive">
     <table class="table table-bordered table-hover mt-3">
         <thead class="table-dark">
-            <tr>
+             <tr>
                 <th>Username</th>
                 <th>Date</th>
                 <th>Time-In</th>
                 <th>Time-Out</th>
+                <th>Total Hours</th> <!-- New -->
             </tr>
         </thead>
         <tbody>
@@ -153,6 +154,7 @@
                 <td>{{ record.date }}</td>
                 <td>{{ record.time_in }}</td>
                 <td>{{ record.time_out or "Not yet timed out" }}</td>
+                <td>{{ record.total_hours or "N/A" }}</td> <!-- New -->
             </tr>
             {% endfor %}
         </tbody>
