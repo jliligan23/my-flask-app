@@ -115,19 +115,4 @@ def view_attendance():
         record['username'] = user['username'] if user else 'Unknown'
     return render_template('attendance_table.html', records=attendance_records)
 
-@admin_bp.route('/validate-location', methods=['POST'])
-def validate_location():
-    data = request.json
-    user_lat = float(data.get('latitude'))
-    user_lon = float(data.get('longitude'))
 
-    office_lat = 14.5995  # Example: Manila
-    office_lon = 120.9842
-    max_distance_km = 0.2
-
-    distance = haversine(user_lon, user_lat, office_lon, office_lat)
-
-    if distance <= max_distance_km:
-        return jsonify({"allowed": True})
-    else:
-        return jsonify({"allowed": False, "message": "You are outside the allowed login area."})
